@@ -1,7 +1,16 @@
 tensorflow>=2.10.0
+<<<<<<< HEAD
+numpy
+pandas
+opencv-python
+pillow
+matplotlib
+scikit-learn
+=======
    numpy
    pandas
    scikit-learn
    opencv-python
    matplotlib
    seaborn
+>>>>>>> 01e354c07f218fe30d0a1ab47c9812b14f04e975

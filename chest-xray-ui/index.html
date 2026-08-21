@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CITRA X-RAY | Sistem Ekspertise Radiologi Toraks Terintegrasi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Background Ambient Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <!-- Header / Navbar (Clean Medical PACS Header) -->
+    <header class="navbar">
+        <div class="logo-wrapper">
+            <div class="logo-badge">
+                <i class="ri-hospital-line"></i>
+            </div>
+            <div class="logo-text">
+                <div class="brand-title-row">
+                    <span class="app-title">CITRA X-RAY</span>
+                    <span class="dicom-status-badge"><i class="ri-shield-check-line"></i> Clinical Decision Support</span>
+                </div>
+                <p class="app-subtitle">Sistem Ekspertise Radiologi Toraks Terintegrasi CNN+RNN (DenseNet121+GRU) & Score-CAM</p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- AI Model Live Indicator -->
+            <div class="model-pill">
+                <span class="live-dot"></span>
+                <span class="model-name font-mono">DenseNet121+GRU</span>
+                <span class="model-divider">•</span>
+                <span class="auroc-highlight">AUROC: <strong>0.7111</strong></span>
+            </div>
+
+            <div class="header-tools-group">
+                <!-- Theme Color Switcher -->
+                <div class="theme-switcher-wrapper">
+                    <button type="button" class="btn btn-sm btn-subtle theme-toggle-btn" id="theme-menu-btn" title="Ganti Tema Tampilan">
+                        <i class="ri-palette-line text-emerald"></i>
+                        <span id="current-theme-label">Pastel Sage</span>
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="theme-dropdown-menu" id="theme-dropdown-menu" style="display: none;">
+                        <button type="button" class="theme-opt active" data-set-theme="sage">
+                            <span class="theme-swatch-dot dot-sage"></span>
+                            <div class="theme-opt-text">
+                                <strong>Pastel Sage</strong>
+                                <small>Botanikal Medis Lembut</small>
+                            </div>
+                        </button>
+                        <button type="button" class="theme-opt" data-set-theme="dark">
+                            <span class="theme-swatch-dot dot-dark"></span>
+                            <div class="theme-opt-text">
+                                <strong>Radiology Dark</strong>
+                                <small>Ruang Baca PACS Gelap</small>
+                            </div>
+                        </button>
+                        <button type="button" class="theme-opt" data-set-theme="light">
+                            <span class="theme-swatch-dot dot-light"></span>
+                            <div class="theme-opt-text">
+                                <strong>Clinical Light</strong>
+                                <small>Putih Medis RS Bersih</small>
+                            </div>
+                        </button>
+                        <button type="button" class="theme-opt" data-set-theme="ocean">
+                            <span class="theme-swatch-dot dot-ocean"></span>
+                            <div class="theme-opt-text">
+                                <strong>Ocean Teal</strong>
+                                <small>Teal Medis Modern</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Database Rekam Medis (Supabase Cloud) -->
+                <button class="btn btn-sm btn-subtle btn-db-header" id="open-db-history-btn" title="Buka Database Riwayat Rekam Medis Cloud">
+                    <i class="ri-database-2-line text-emerald"></i>
+                    <span>Database</span>
+                    <span class="badge-db-live" id="db-status-pill">Cloud ON</span>
+                </button>
+
+                <!-- Print Radiology Expertise Sheet -->
+                <button class="btn btn-sm btn-subtle" id="print-report-btn" title="Cetak Lembar Ekspertise Radiologi">
+                    <i class="ri-printer-line"></i>
+                    <span>Cetak</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-layout">
+        <!-- Left Panel: Radiograph Viewport & Controls -->
+        <aside class="sidebar-panel">
+            <!-- 1. Patient & Study Profile (Vertical Card - Turun ke Bawah) -->
+            <div class="glass-card patient-vertical-card">
+                <div class="card-header">
+                    <div class="header-title">
+                        <i class="ri-user-heart-line text-primary"></i>
+                        <h3>Informasi Subjek & Metadata Dataset</h3>
+                    </div>
+                    <span class="badge-mini font-mono" id="patient-id-badge">NIH-00013348_000</span>
+                </div>
+                <div class="patient-vertical-list">
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-user-3-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Identitas Subjek (Dataset)</span>
+                            <strong class="p-vert-val" id="patient-name">Subject #00013348</strong>
+                        </div>
+                    </div>
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-barcode-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Image Index / Patient ID</span>
+                            <strong class="p-vert-val font-mono" id="patient-id">NIH-00013348_000</strong>
+                        </div>
+                    </div>
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-genderless-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Usia & Gender (Demografi)</span>
+                            <span class="p-vert-val" id="patient-gender">54Y / Male (PA View)</span>
+                        </div>
+                    </div>
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-focus-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Dataset Referensi</span>
+                            <span class="p-vert-val">NIH ChestX-ray14 Benchmark</span>
+                        </div>
+                    </div>
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-time-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Waktu Pemeriksaan</span>
+                            <span class="p-vert-val font-mono" id="study-time">20 Agt 2026, 14:30 WIB</span>
+                        </div>
+                    </div>
+                    <div class="p-vert-row">
+                        <div class="p-vert-icon"><i class="ri-hospital-line"></i></div>
+                        <div class="p-vert-content">
+                            <span class="p-vert-label">Unit Radiologi</span>
+                            <span class="p-vert-val">Instalasi Radiologi Diagnostik</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. DICOM Radiograph Viewport -->
+            <div class="glass-card upload-card">
+                <div class="card-header">
+                    <div class="header-title">
+                        <i class="ri-film-line text-primary"></i>
+                        <h3>Viewport Radiografi Toraks</h3>
+                    </div>
+                    <button class="btn-icon" id="reset-upload-btn" style="display: none;" title="Ganti / Reset Citra">
+                        <i class="ri-refresh-line"></i>
+                    </button>
+                </div>
+
+                <!-- Dropzone & Interactive DICOM Preview -->
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-empty" id="dropzone-prompt">
+                        <div class="upload-icon-circle">
+                            <i class="ri-upload-cloud-line"></i>
+                        </div>
+                        <p class="drop-primary-text">Unggah Citra X-Ray Pasien</p>
+                        <p class="drop-secondary-text">Tarik & lepas file (.png, .jpg, .dcm) ke area ini</p>
+                        <button type="button" class="btn btn-outline-primary" id="browse-btn">
+                            <i class="ri-folder-open-line"></i> Buka File Citra
+                        </button>
+                        <span class="format-note">Matriks input dinormalisasi ke resolusi standar 224×224</span>
+                    </div>
+
+                    <div class="preview-stage" id="preview-stage" style="display: none;">
+                        <!-- Medical Viewer Toolbar -->
+                        <div class="dicom-tools-bar">
+                            <div class="dicom-wl-group">
+                                <span class="tool-group-label">Window:</span>
+                                <button type="button" class="wl-btn active" data-wl="default" title="Default Window">Standar</button>
+                                <button type="button" class="wl-btn" data-wl="lung" title="Lung Window (Paru)">Paru</button>
+                                <button type="button" class="wl-btn" data-wl="bone" title="Bone Window (Tulang)">Tulang</button>
+                            </div>
+                            <div class="dicom-action-group">
+                                <button type="button" class="tool-btn" id="invert-btn" title="Balik Warna (Invert LUT / Bones White)">
+                                    <i class="ri-contrast-2-line"></i>
+                                </button>
+                                <button type="button" class="tool-btn" id="change-file-btn" title="Ganti File Citra">
+                                    <i class="ri-file-upload-line"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Image Container with Radiograph Markers -->
+                        <div class="viewport-canvas-wrapper" id="viewport-canvas-wrapper">
+                            <div class="dicom-marker marker-r">R</div>
+                            <div class="dicom-marker marker-l">L</div>
+                            <img id="preview-img" class="radiograph-img" src="" alt="Citra Rontgen Toraks Pasien">
+                        </div>
+
+                        <div class="radiograph-toolbar">
+                            <span class="file-name-label" id="file-name-label">sample_xray.jpg</span>
+                            <span class="scale-label">Matriks: 224×224</span>
+                        </div>
+                    </div>
+
+                    <input type="file" id="file-input" hidden accept=".png,.jpg,.jpeg,.dcm">
+                </div>
+            </div>
+
+            <!-- 2. Clinical Case Presets (Kasus Pasien Rujukan) -->
+            <div class="glass-card presets-card">
+                <div class="card-header">
+                    <div class="header-title">
+                        <i class="ri-folder-user-line text-accent"></i>
+                        <h3>Sampel Kasus Dataset NIH ChestX-ray14</h3>
+                    </div>
+                    <span class="badge-mini">5 Kasus Uji</span>
+                </div>
+                <div class="presets-grid">
+                    <button class="preset-card active" data-preset="sample_xray" data-patient="Subject #00013348" data-id="NIH-00013348_000" data-gender="54Y / Male (PA View)">
+                        <div class="preset-indicator bg-emerald"></div>
+                        <div class="preset-content">
+                            <div class="preset-name">Kasus A: Infiltrat Konsolidasi</div>
+                            <div class="preset-desc">NIH-00013348 | Infiltrat / Konsolidasi Bilateral</div>
+                        </div>
+                    </button>
+                    <button class="preset-card" data-preset="effusion" data-patient="Subject #00004512" data-id="NIH-00004512_002" data-gender="62Y / Female (PA View)">
+                        <div class="preset-indicator bg-cyan"></div>
+                        <div class="preset-content">
+                            <div class="preset-name">Kasus B: Efusi Pleura Dekstra</div>
+                            <div class="preset-desc">NIH-00004512 | Pleural Effusion (Sudut Kostofrenikus)</div>
+                        </div>
+                    </button>
+                    <button class="preset-card" data-preset="hernia" data-patient="Subject #00018241" data-id="NIH-00018241_001" data-gender="68Y / Male (PA View)">
+                        <div class="preset-indicator bg-purple"></div>
+                        <div class="preset-content">
+                            <div class="preset-name">Kasus C: Hiatal Hernia</div>
+                            <div class="preset-desc">NIH-00018241 | Diaphragmatic Hernia (Retrokardial)</div>
+                        </div>
+                    </button>
+                    <button class="preset-card" data-preset="pneumothorax" data-patient="Subject #00021643" data-id="NIH-00021643_004" data-gender="27Y / Male (AP View)">
+                        <div class="preset-indicator bg-amber"></div>
+                        <div class="preset-content">
+                            <div class="preset-name">Kasus D: Pneumotoraks Sinistra</div>
+                            <div class="preset-desc">NIH-00021643 | Pneumothorax (Hiperlusensi Apikal)</div>
+                        </div>
+                    </button>
+                    <button class="preset-card" data-preset="normal" data-patient="Subject #00029510" data-id="NIH-00029510_000" data-gender="31Y / Female (PA View)">
+                        <div class="preset-indicator bg-blue"></div>
+                        <div class="preset-content">
+                            <div class="preset-name">Kasus E: Toraks Dalam Batas Normal</div>
+                            <div class="preset-desc">NIH-00029510 | No Finding (Struktur Toraks Intak)</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Cutoff Ambang Batas Klinis & Penjelasan Fungsi -->
+            <div class="glass-card threshold-card">
+                <div class="card-header">
+                    <div class="header-title">
+                        <i class="ri-equalizer-line text-primary"></i>
+                        <h3>Cutoff Ambang Deteksi Klinis</h3>
+                    </div>
+                    <div class="threshold-pill">
+                        <span id="threshold-val">0.20</span>
+                    </div>
+                </div>
+                <div class="slider-box">
+                    <input type="range" id="threshold-slider" class="custom-range" min="0.05" max="0.90" step="0.01" value="0.20">
+                    <div class="slider-markers">
+                        <span>Sensitif (0.05)</span>
+                        <span class="marker-active">Optimal (0.20)</span>
+                        <span>Spesifik (0.90)</span>
+                    </div>
+                </div>
+
+                <!-- Penjelasan Fungsi Cutoff yang Mudah Dimengerti -->
+                <div class="cutoff-explanation-box">
+                    <div class="cutoff-exp-header">
+                        <i class="ri-questionnaire-line text-emerald"></i>
+                        <strong>Fungsi Ambang Batas (Threshold):</strong>
+                    </div>
+                    <p class="cutoff-exp-text">
+                        Model AI menghitung probabilitas (0–100%) untuk setiap 15 penyakit. Nilai <strong>Cutoff 0.20 (20%)</strong> adalah titik batas keputusan:
+                    </p>
+                    <ul class="cutoff-rules-list">
+                        <li><span class="rule-badge rule-pos">&ge; 0.20</span> Dinyatakan <strong>Terdeteksi / Positif</strong> untuk ditelaah dokter.</li>
+                        <li><span class="rule-badge rule-neg">&lt; 0.20</span> Dinyatakan <strong>Normal / Negatif</strong>.</li>
+                    </ul>
+                    <span class="cutoff-note">
+                        <em>*Mengapa 0.20?</em> Karena kasus patologi toraks bersifat tidak seimbang (*imbalanced*). Ambang 0.20 mencegah terlewatnya penyakit kritis (*memaksimalkan Sensitivitas/Recall*).
+                    </span>
+                </div>
+            </div>
+
+            <!-- Status Pemrosesan Model AI (Berhasil / Gagal) -->
+            <div class="glass-card model-status-card" id="model-status-card">
+                <div class="model-status-header">
+                    <div class="status-icon-box status-ready" id="status-icon-box">
+                        <i class="ri-cpu-line" id="status-main-icon"></i>
+                    </div>
+                    <div class="status-info">
+                        <strong id="model-status-title">Status Model: Siap Inferensi</strong>
+                        <span id="model-status-desc">Menunggu instruksi analisis citra rontgen.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Primary CTA Button -->
+            <button class="btn btn-primary-cta" id="analyze-btn">
+                <i class="ri-stethoscope-line" id="analyze-icon"></i>
+                <span id="analyze-text">Jalankan Analisis AI & Score-CAM</span>
+            </button>
+        </aside>
+
+        <!-- Right Panel: Comprehensive Diagnostic Workspace -->
+        <section class="workspace-panel">
+            <!-- Formal Clinical Impression & Radiology Findings Banner (Clean Structured Layout) -->
+            <div class="impression-banner" id="impression-banner">
+                <div class="impression-icon-wrap" id="impression-icon">
+                    <i class="ri-stethoscope-fill"></i>
+                </div>
+                <div class="impression-body">
+                    <div class="impression-top-row">
+                        <div class="impression-title-group">
+                            <h4 id="impression-status-title">Kesan Radiologis: Menunggu Analisis</h4>
+                            <span class="triage-tag" id="triage-tag">Standby</span>
+                        </div>
+                        <span class="timestamp-tag" id="impression-time">Status Realtime</span>
+                    </div>
+
+                    <!-- Clean Structured Findings Container (Bukan Wall of Text) -->
+                    <div class="structured-findings-container" id="structured-findings-container">
+                        <div class="findings-chips-row" id="findings-chips-row">
+                            <!-- Injected dynamically as neat badges -->
+                            <span class="standby-text">Pilih salah satu kasus pasien atau unggah foto toraks rujukan, lalu klik tombol <strong>"Jalankan Analisis AI & Score-CAM"</strong>.</span>
+                        </div>
+                    </div>
+
+                    <div class="clinical-recommendation-note" id="clinical-recommendation-note" style="display: none;">
+                        <i class="ri-lightbulb-line text-emerald"></i>
+                        <span id="recommendation-text-content">Disarankan evaluasi lokalisasi lesi pada tab <strong>Score-CAM</strong> dan konfirmasi dengan dokter spesialis radiologi.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs-container">
+                <div class="tab-triggers">
+                    <button class="tab-trigger active" data-tab="tab-predictions" id="tab-btn-pred">
+                        <i class="ri-survey-line"></i>
+                        <span>1. Hasil Evaluasi 15 Patologi Toraks</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="tab-xai" id="tab-btn-xai">
+                        <i class="ri-focus-3-line"></i>
+                        <span>2. Lokalisasi Lesi (Score-CAM XAI)</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="tab-report" id="tab-btn-report">
+                        <i class="ri-file-paper-2-line"></i>
+                        <span>3. Lembar Ekspertise Terstruktur</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: 15 Disease Classification Grid -->
+                <div class="tab-pane active" id="tab-predictions">
+                    <!-- Key Metric Highlights -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-title">Patologi Terdeteksi</span>
+                            <div class="metric-value-row">
+                                <span class="metric-value text-red" id="metric-detected">-</span>
+                                <span class="metric-sub">/ 15 penyakit</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Temuan Dominan</span>
+                            <div class="metric-value-row">
+                                <span class="metric-value text-primary" id="metric-top-prob">-</span>
+                            </div>
+                            <span class="metric-sub" id="metric-top-name">Belum dianalisis</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Benchmark Mean AUROC</span>
+                            <div class="metric-value-row">
+                                <span class="metric-value text-purple">0.7111</span>
+                            </div>
+                            <span class="metric-sub">ROC-AUC Evaluasi Model</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Model Arsitektur</span>
+                            <div class="metric-value-row">
+                                <span class="metric-value text-emerald">DenseNet121+GRU</span>
+                            </div>
+                            <span class="metric-sub">CNN Feature + Recurrent</span>
+                        </div>
+                    </div>
+
+                    <!-- Disease Classification List -->
+                    <div class="disease-list-wrapper">
+                        <div class="list-legend">
+                            <span>Kategori Patologi & Nilai Keyakinan (Probability)</span>
+                            <span>Status Evaluasi Ambang (Cutoff 20%)</span>
+                        </div>
+                        <div class="disease-list" id="disease-list">
+                            <!-- Items injected dynamically -->
+                            <div class="empty-placeholder">
+                                <i class="ri-pulse-line"></i>
+                                <p>Belum ada data evaluasi. Klik <strong>"Jalankan Analisis AI & Score-CAM"</strong> untuk memulai inferensi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Score-CAM XAI Lesion Studio with Real-time Interactive Blending & Colormap Range Scale -->
+                <div class="tab-pane" id="tab-xai">
+                    <!-- XAI Toolbar -->
+                    <div class="xai-toolbar">
+                        <div class="xai-selector-box">
+                            <label for="xai-disease-select">
+                                <i class="ri-microscope-line text-accent"></i> Target Patologi yang Divisualisasikan:
+                            </label>
+                            <div class="select-styled">
+                                <select id="xai-disease-select">
+                                    <option value="" disabled selected>Pilih patologi...</option>
+                                </select>
+                                <i class="ri-arrow-down-s-line select-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="xai-slider-box">
+                            <div class="slider-header-inline">
+                                <label for="xai-alpha-slider">
+                                    <i class="ri-contrast-drop-line text-primary"></i> Transparansi Blending Overlay:
+                                </label>
+                                <strong id="xai-alpha-label" class="alpha-display-badge">45%</strong>
+                            </div>
+                            <input type="range" id="xai-alpha-slider" class="custom-range alpha-range" min="0.00" max="1.00" step="0.02" value="0.45">
+                        </div>
+
+                        <div class="xai-quick-meta" id="xai-quick-meta">
+                            <div class="meta-tag" id="xai-tag-prob">Prob: -</div>
+                            <div class="meta-tag" id="xai-tag-auroc">AUROC: -</div>
+                        </div>
+                    </div>
+
+                    <!-- 3-Panel Visual Showcase Grid -->
+                    <div class="xai-showcase-grid">
+                        <!-- Panel 1: Original Radiograph -->
+                        <div class="showcase-card">
+                            <div class="showcase-head">
+                                <span class="showcase-step">Panel 1</span>
+                                <h4>Citra Rontgen Pasien (Input)</h4>
+                            </div>
+                            <div class="showcase-viewport" id="viewport-orig">
+                                <div class="viewport-loading" id="load-orig">
+                                    <i class="ri-image-line"></i>
+                                    <span>Menunggu Analisis...</span>
+                                </div>
+                                <img id="showcase-img-orig" class="showcase-img" src="" alt="Citra Rontgen Pasien" style="display: none;">
+                            </div>
+                            <div class="showcase-caption">
+                                <i class="ri-checkbox-circle-line text-muted"></i> Matriks ternormalisasi 224×224 piksel
+                            </div>
+                        </div>
+
+                        <!-- Panel 2: Score-CAM Heatmap -->
+                        <div class="showcase-card highlight-card">
+                            <div class="showcase-head">
+                                <span class="showcase-step bg-amber">Panel 2</span>
+                                <h4>Score-CAM Activation Map</h4>
+                            </div>
+                            <div class="showcase-viewport" id="viewport-heat">
+                                <div class="viewport-loading" id="load-heat">
+                                    <i class="ri-fire-line"></i>
+                                    <span>Menunggu Analisis...</span>
+                                </div>
+                                <img id="showcase-img-heat" class="showcase-img" src="" alt="Score-CAM Heatmap" style="display: none;">
+                            </div>
+                            <div class="showcase-caption">
+                                <i class="ri-fire-fill text-amber"></i> Peta bobot aktivasi fitur konvolusi lapisan akhir
+                            </div>
+                        </div>
+
+                        <!-- Panel 3: Interactive Real-time Blended Overlay -->
+                        <div class="showcase-card">
+                            <div class="showcase-head">
+                                <span class="showcase-step bg-cyan">Panel 3</span>
+                                <h4>Diagnostic Overlay (Real-time Blend)</h4>
+                            </div>
+                            <div class="showcase-viewport overlay-interactive-viewport" id="viewport-over">
+                                <div class="viewport-loading" id="load-over">
+                                    <i class="ri-radar-line"></i>
+                                    <span>Menunggu Analisis...</span>
+                                </div>
+                                <!-- Layered Images for Instant 0ms Smooth Hardware-Accelerated Blending -->
+                                <img id="overlay-base-img" class="showcase-img overlay-base-layer" src="" alt="X-Ray Base" style="display: none;">
+                                <img id="overlay-heat-img" class="showcase-img overlay-heat-layer" src="" alt="Heatmap Overlay" style="display: none; opacity: 0.45;">
+                            </div>
+                            <div class="showcase-caption">
+                                <i class="ri-focus-3-line text-cyan"></i> Superimpose lokasi lesi terhadap anatomi paru
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colormap Scale / Range Bar (Gradasi Skala Warna Score-CAM) -->
+                    <div class="colormap-scale-card">
+                        <div class="colormap-scale-header">
+                            <span class="scale-title"><i class="ri-gradienter-line text-emerald"></i> Skala Rentang Warna Aktivasi Score-CAM (Color Range Scale):</span>
+                            <span class="scale-mode-label font-mono">Colormap: JET (0.0 - 1.0)</span>
+                        </div>
+                        <div class="colormap-bar-wrapper">
+                            <div class="colormap-gradient-bar"></div>
+                            <div class="colormap-ticks">
+                                <span><strong>0.0</strong> (Aktivasi Min / Normal)</span>
+                                <span><strong>0.25</strong> (Sangat Rendah)</span>
+                                <span><strong>0.50</strong> (Moderat)</span>
+                                <span><strong>0.75</strong> (Signifikan)</span>
+                                <span><strong>1.0</strong> (Aktivasi Maks / Fokus Lesi)</span>
+                            </div>
+                        </div>
+                        <div class="colormap-legend-row">
+                            <span class="legend-item"><span class="legend-color-box bg-blue-cold"></span> Regio Anatomi Tanpa Kelainan (Inaktif)</span>
+                            <span class="legend-item"><span class="legend-color-box bg-green-med"></span> Transisi Densitas Jaringan</span>
+                            <span class="legend-item"><span class="legend-color-box bg-red-hot"></span> Fokus Lesi Patologi Dominan (Hotspot Model)</span>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Interpretation Card -->
+                    <div class="interpretation-card">
+                        <div class="inter-icon">
+                            <i class="ri-stethoscope-line"></i>
+                        </div>
+                        <div class="inter-text">
+                            <h5>Interpretasi Klinis & Metodologi Explainable AI (XAI)</h5>
+                            <p id="interpretation-desc">
+                                Algoritma <strong>Score-CAM (Score-Weighted Class Activation Mapping)</strong> mengekstraksi representasi spasial secara <em>gradient-free</em> dari lapisan konvolusi DenseNet121, memberikan penjelasan visual tanpa degradasi gradien untuk mendukung interpretasi lesi patologis secara objektif.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Formal Structured Radiology Expertise Sheet (Lembar Ekspertise) -->
+                <div class="tab-pane" id="tab-report">
+                    <div class="expertise-sheet" id="expertise-sheet">
+                        <!-- Expertise Letterhead -->
+                        <div class="expertise-header">
+                            <div class="hospital-branding">
+                                <div class="hosp-logo"><i class="ri-hospital-line"></i></div>
+                                <div>
+                                    <h3 class="hosp-name">INSTALASI RADIOLOGI & PENCITRAAN DIAGNOSTIK</h3>
+                                    <p class="hosp-sub">Rumah Sakit Akademik • Laboratorium AI Medis & Radiologi Komputasi</p>
+                                </div>
+                            </div>
+                            <div class="report-meta-box">
+                                <span class="doc-code">No. Ekspertise: <strong id="doc-ref-no">EXP-2026/08/0149</strong></span>
+                                <span class="doc-date" id="doc-date-val">20 Agustus 2026</span>
+                            </div>
+                        </div>
+
+                        <!-- Patient Data Table in Report -->
+                        <div class="expertise-patient-grid">
+                            <div class="grid-item">
+                                <span class="lbl">Identitas Subjek:</span>
+                                <strong id="exp-p-name">Subject #00013348</strong>
+                            </div>
+                            <div class="grid-item">
+                                <span class="lbl">Patient / Image ID:</span>
+                                <strong id="exp-p-rm" class="font-mono">NIH-00013348_000</strong>
+                            </div>
+                            <div class="grid-item">
+                                <span class="lbl">Demografi (Usia/Gender):</span>
+                                <span id="exp-p-gender">54Y / Male (PA View)</span>
+                            </div>
+                            <div class="grid-item">
+                                <span class="lbl">Pemeriksaan / Proyeksi:</span>
+                                <span>Chest Radiograph PA/AP (NIH-CX14)</span>
+                            </div>
+                        </div>
+
+                        <!-- Structured Anatomical Findings -->
+                        <div class="expertise-section">
+                            <h4 class="section-heading"><i class="ri-article-line"></i> URAIAN TEMUAN RADIOLOGIS TERSTRUKTUR (FINDINGS)</h4>
+                            <table class="findings-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Regio Anatomis</th>
+                                        <th>Deskripsi Temuan & Evaluasi AI</th>
+                                        <th style="width: 20%; text-align: center;">Status AI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>COR (Jantung & Mediastinum)</strong></td>
+                                        <td id="finding-cor">Ukuran dan bentuk jantung dalam batas normal. Mediastinum superior tidak tampak melebar.</td>
+                                        <td id="badge-cor" class="text-center"><span class="badge-status-ok">Normal</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PULMO (Paru-paru)</strong></td>
+                                        <td id="finding-pulmo">Corakan bronkovaskular dalam batas wajar. Tampak opasitas fokal konsolidasi pada lapang bawah paru kanan.</td>
+                                        <td id="badge-pulmo" class="text-center"><span class="badge-status-alert">Temuan Positif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PLEURA & DIAFRAGMA</strong></td>
+                                        <td id="finding-pleura">Sudut kostofrenikus kanan dan kiri tajam. Kubah diafragma kanan dan kiri licin dan simetris.</td>
+                                        <td id="badge-pleura" class="text-center"><span class="badge-status-ok">Normal</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>SKELETAL & SOFT TISSUE</strong></td>
+                                        <td id="finding-bones">Struktur tulang costa dan clavicula intak, tidak tampak lesi litik/blastik. Jaringan lunak dinding dada tenang.</td>
+                                        <td id="badge-bones" class="text-center"><span class="badge-status-ok">Normal</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Impression Summary & Conclusion -->
+                        <div class="expertise-section">
+                            <h4 class="section-heading"><i class="ri-checkbox-circle-line"></i> KESIMPULAN / KESAN RADIOLOGIS (IMPRESSION)</h4>
+                            <div class="conclusion-box" id="expertise-conclusion">
+                                <p>1. <strong>Infiltrat Toraks Fokal</strong> pada lapang bawah pulmo (Probabilitas AI: <strong>47.73%</strong>).</p>
+                                <p>2. Tidak tampak kardiomegali maupun efusi pleura bermakna.</p>
+                                <p class="recommendation-text"><em>Saran Klinis: Korelasi dengan gejala klinis batuk/demam dan laboratorium leukosit.</em></p>
+                            </div>
+                        </div>
+
+                        <!-- Doctor Signature / Validation -->
+                        <div class="expertise-footer">
+                            <div class="validation-stamp">
+                                <div class="stamp-box">
+                                    <i class="ri-verified-badge-line text-emerald"></i>
+                                    <span>TERVALIDASI SECARA RADIOLOGIS</span>
+                                </div>
+                                <span class="stamp-note">Decision Support System berbasis AI (DenseNet121+GRU)</span>
+                            </div>
+                            <div class="doctor-signature">
+                                <p class="sig-title">Dokter Spesialis Radiologi (Sp.Rad),</p>
+                                <div class="sig-line">
+                                    <span class="sig-name">dr. Radiolog Konsultan, Sp.Rad(K)</span>
+                                    <span class="sig-sip font-mono">SIP: 503/442/SIP-DS/2026</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-inner">
+            <div class="footer-disclaimer">
+                <i class="ri-information-line text-amber"></i>
+                <span><strong>Catatan Medis:</strong> Perangkat lunak ini dikembangkan sebagai purwarupa penelitian skripsi sistem pendukung keputusan klinis (Clinical Decision Support System). Hasil interpretasi memerlukan telaah oleh dokter spesialis radiologi.</span>
+            </div>
+            <div class="footer-meta">
+                <span>CITRA X-RAY • DenseNet121+GRU & Score-CAM © 2026</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- PACS Database & Cloud History Modal -->
+    <div id="db-history-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge">
+                        <i class="ri-database-2-line"></i>
+                    </div>
+                    <div>
+                        <h3 class="modal-title">Database Rekam Medis & Riwayat Diagnosa (Supabase)</h3>
+                        <p class="modal-subtitle">Arsip Digital Cloud Riwayat Pemeriksaan X-Ray Toraks & Hasil AI DenseNet121+GRU</p>
+                    </div>
+                </div>
+                <div class="modal-header-actions">
+                    <button class="btn btn-sm btn-subtle" id="refresh-db-btn" title="Muat Ulang Data">
+                        <i class="ri-refresh-line"></i> Refresh
+                    </button>
+                    <button class="modal-close-btn" id="close-db-history-btn" title="Tutup">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="db-stats-bar">
+                    <div class="db-stat-item">
+                        <span class="db-stat-label">STATUS SUPABASE</span>
+                        <div class="db-stat-val text-emerald">
+                            <i class="ri-checkbox-circle-fill"></i> <span id="db-conn-text">Terhubung (Online)</span>
+                        </div>
+                    </div>
+                    <div class="db-stat-item">
+                        <span class="db-stat-label">TOTAL RIWAYAT ARSIP</span>
+                        <div class="db-stat-val" id="db-total-records">0 Pemeriksaan</div>
+                    </div>
+                    <div class="db-stat-item db-search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" id="db-search-input" placeholder="Cari nama pasien, no RM, penyakit..." class="db-search-input">
+                    </div>
+                </div>
+
+                <div class="db-table-wrapper">
+                    <table class="db-table" id="db-history-table">
+                        <thead>
+                            <tr>
+                                <th>Waktu & ID Studi</th>
+                                <th>Pasien & No. RM</th>
+                                <th>Proyeksi</th>
+                                <th>Temuan Utama AI</th>
+                                <th>Probabilitas</th>
+                                <th>Status Triage</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-history-tbody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="ri-loader-4-line spin"></i> Memuat data riwayat dari Supabase...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <span class="text-muted text-xs">
+                    <i class="ri-shield-check-line text-emerald"></i> Data tersinkronisasi realtime ke PostgreSQL Supabase Cloud
+                </span>
+                <button class="btn btn-sm btn-subtle" id="close-db-history-footer-btn">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Element -->
+    <div id="app-toast" class="app-toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
