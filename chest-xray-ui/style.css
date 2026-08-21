@@ -2508,3 +2508,86 @@ h1, h2, h3, h4, h5 {
     border-top: 1px solid var(--border-subtle);
     background: var(--bg-surface);
 }
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS (Resolusi di bawah 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Navbar Adjustment */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.8rem 1rem;
+        gap: 0.8rem;
+    }
+    .app-subtitle {
+        display: none;
+    }
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    /* Main Layout Adjustment */
+    .main-layout {
+        grid-template-columns: 1fr;
+        padding: 0.8rem 0.5rem;
+        gap: 1rem;
+    }
+
+    /* Tab Triggers (Horizontal Scroll) */
+    .tab-triggers {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    .tab-trigger {
+        white-space: nowrap;
+        padding: 0.6rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    /* Grids to 1 Column */
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    .presets-grid {
+        grid-template-columns: 1fr;
+    }
+    .xai-showcase-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .expertise-patient-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Tables Horizontal Scroll */
+    .expertise-section {
+        overflow-x: auto;
+    }
+    .findings-table {
+        min-width: 500px;
+    }
+
+    /* DICOM Tools Bar Wrapping */
+    .dicom-tools-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .dicom-wl-group {
+        flex-wrap: wrap;
+    }
+    
+    /* Adjust Fonts and Padding in Cards */
+    .glass-card {
+        padding: 1rem;
+    }
+    .impression-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
