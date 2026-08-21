@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePatientDisplay();
 
         try {
-            const res = await fetch(`/api/presets/${presetId}`);
+            const res = await fetch(`https://ayunalarati-thoracic-xray-api.hf.space/api/presets/${presetId}`);
             if (!res.ok) throw new Error('Gagal memuat preset citra');
             const blob = await res.blob();
             const reader = new FileReader();
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 payload.image_b64 = currentImageBase64;
             }
 
-            const response = await fetch('/api/predict', {
+            const response = await fetch('https://ayunalarati-thoracic-xray-api.hf.space/api/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 payload.image_b64 = currentImageBase64;
             }
 
-            const res = await fetch('/api/scorecam', {
+            const res = await fetch('https://ayunalarati-thoracic-xray-api.hf.space/api/scorecam', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkDatabaseHealth() {
         try {
-            const res = await fetch('/api/db-health');
+            const res = await fetch('https://ayunalarati-thoracic-xray-api.hf.space/api/db-health');
             if (!res.ok) throw new Error('DB Offline');
             const data = await res.json();
             if (data.supabase_connected) {
@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
-            const res = await fetch('/api/history?limit=50');
+            const res = await fetch('https://ayunalarati-thoracic-xray-api.hf.space/api/history?limit=50');
             if (!res.ok) {
                 const errData = await res.json();
                 throw new Error(errData.error || 'Gagal memuat riwayat');

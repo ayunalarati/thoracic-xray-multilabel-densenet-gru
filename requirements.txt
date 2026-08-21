@@ -6,4 +6,6 @@ pillow
 matplotlib
 scikit-learn
 seaborn
+fastapi
+uvicorn
 gradio
